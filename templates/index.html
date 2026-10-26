@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. Dev || FapHouse Admin Console</title>
+    <style>
+        :root {
+            --bg-dark: #0a0b0e; --card-bg: #14171f; --border: #262b38;
+            --accent: #f4bb2e; --accent-hover: #e3a200;
+            --text-main: #ffffff; --text-muted: #9499a8;
+            --danger: #ff4d4f; --success: #2ecc71; --warning: #f39c12;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Roboto, 'Helvetica Neue', sans-serif; }
+        body { background: var(--bg-dark); color: var(--text-main); padding: 24px; }
+        .container { max-width: 1280px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-badge { background: var(--accent); color: #111; font-weight: 800; padding: 6px 12px; border-radius: 6px; font-size: 18px; }
+        .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 28px; }
+        .stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+        .stat-label { color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-size: 32px; font-weight: 700; margin-top: 8px; color: var(--accent); }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 22px; margin-bottom: 24px; }
+        .card-title { font-size: 18px; font-weight: 700; color: var(--accent); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { color: var(--text-muted); font-weight: 600; }
+        .badge { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+        .badge-active { background: rgba(46, 204, 113, 0.15); color: var(--success); }
+        .badge-expired { background: rgba(255, 77, 79, 0.15); color: var(--danger); }
+        input[type="text"], input[type="password"], input[type="number"], textarea {
+            width: 100%; background: #0d0f14; border: 1px solid var(--border); color: #fff;
+            padding: 10px 14px; border-radius: 8px; margin-top: 6px; margin-bottom: 14px; font-size: 14px;
+        }
+        .btn { background: var(--accent); color: #111; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
+        .btn:hover { background: var(--accent-hover); }
+        .btn-danger { background: var(--danger); color: #fff; padding: 6px 12px; font-size: 12px; }
+        .two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 24px; }
+        .footer { text-align: center; color: var(--text-muted); margin-top: 40px; font-size: 13px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="brand">
+            <span class="brand-badge">FAPHOUSE PRO</span>
+            <div>
+                <h2>Admin Control Center</h2>
+                <p style="color: var(--text-muted); font-size: 13px;">App by Dr. Dev || Dr. Hamza</p>
+            </div>
+        </div>
+        {% if not authorized %}
+        <form method="get" action="/admin" style="display:flex; gap:10px; align-items:center;">
+            <input type="password" name="token" placeholder="Enter Admin Secret Token" style="margin:0; width:240px;">
+            <button class="btn" type="submit">Unlock</button>
+        </form>
+        {% else %}
+        <span class="badge badge-active">Firebase: Connected (Node /Faphouse)</span>
+        {% endif %}
+    </div>
+
+    {% if not authorized %}
+    <div class="card" style="text-align:center; padding: 48px;">
+        <h3 style="margin-bottom:10px;">Authentication Required</h3>
+        <p style="color: var(--text-muted);">Enter your <code>ADMIN_SECRET_TOKEN</code> in the top-right corner.</p>
+    </div>
+    {% else %}
+
+    <div class="grid-stats">
+        <div class="stat-card">
+            <div class="stat-label">Active Licenses</div>
+            <div class="stat-value" style="color: var(--success);">{{ stats.active_count }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Expired Licenses</div>
+            <div class="stat-value" style="color: var(--danger);">{{ stats.expired_count }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Blocked Devices</div>
+            <div class="stat-value" style="color: var(--warning);">{{ stats.blocked_count }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Rate Limited</div>
+            <div class="stat-value">{{ stats.rate_limited_count }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Shadow Banned</div>
+            <div class="stat-value" style="color: #e056fd;">{{ stats.shadow_banned_count }}</div>
+        </div>
+    </div>
+
+    <div class="two-col">
+        <div class="card">
+            <div class="card-title">OTA Update System</div>
+            <form method="post" action="/admin/action">
+                <input type="hidden" name="token" value="{{ token }}">
+                <input type="hidden" name="action_type" value="update_config">
+                <label style="display:flex; align-items:center; gap:8px; margin-bottom:14px; cursor:pointer;">
+                    <input type="checkbox" name="update_enabled" {% if update_config.enabled %}checked{% endif %}>
+                    <span>Enable Update Dialog</span>
+                </label>
+                <label>Version Name</label>
+                <input type="text" name="version_name" value="{{ update_config.version_name }}">
+                <label>Version Code</label>
+                <input type="number" name="version_code" value="{{ update_config.version_code }}">
+                <label>Update URL</label>
+                <input type="text" name="update_url" value="{{ update_config.update_url }}">
+                <label>Features</label>
+                <textarea name="features" rows="4">{{ update_config.features }}</textarea>
+                <button type="submit" class="btn">Save</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Premium Cookies</div>
+            <form method="post" action="/admin/action">
+                <input type="hidden" name="token" value="{{ token }}">
+                <input type="hidden" name="action_type" value="update_cookies">
+                <label>Raw Cookie Header</label>
+                <textarea name="premium_cookies" rows="10">{{ premium_cookies }}</textarea>
+                <button type="submit" class="btn">Update Cookies</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Activated Users</div>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th><th>Key</th><th>Plan</th><th>Status</th>
+                        <th>Device ID</th><th>Device</th><th>Expires</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lic in licenses %}
+                    <tr>
+                        <td><strong>{{ lic.full_name }}</strong></td>
+                        <td><code>{{ lic.key }}</code></td>
+                        <td>{{ lic.plan }}</td>
+                        <td>
+                            {% if lic.status == 'active' and lic.expires_at > now %}
+                                <span class="badge badge-active">ACTIVE</span>
+                            {% else %}
+                                <span class="badge badge-expired">{{ lic.status | upper }}</span>
+                            {% endif %}
+                        </td>
+                        <td><code>{{ lic.device_id }}</code></td>
+                        <td>{{ lic.device_name }}</td>
+                        <td>{{ lic.expires_at }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" style="text-align:center; color:var(--text-muted);">No licenses.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Rate Limited</div>
+        <table>
+            <thead>
+                <tr><th>Key</th><th>Requests</th><th>Unlock In</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+                {% for rl in rate_limited_users %}
+                <tr>
+                    <td><code>{{ rl.key }}</code></td>
+                    <td>{{ rl.count }}</td>
+                    <td>{{ rl.rate_limited_until - now }}s</td>
+                    <td>
+                        <form method="post" action="/admin/action" style="display:inline;">
+                            <input type="hidden" name="token" value="{{ token }}">
+                            <input type="hidden" name="action_type" value="clear_ratelimit">
+                            <input type="hidden" name="target_key" value="{{ rl.key }}">
+                            <button class="btn btn-danger" type="submit">Reset</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">None.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Blocked Devices</div>
+        <table>
+            <thead>
+                <tr><th>Device ID</th><th>IP</th><th>Tries</th><th>Remaining</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+                {% for b in blocked_users %}
+                <tr>
+                    <td><code>{{ b.device_id }}</code></td>
+                    <td>{{ b.ip }}</td>
+                    <td>{{ b.failed_attempts }}</td>
+                    <td>{{ b.blocked_until - now }}s</td>
+                    <td>
+                        <form method="post" action="/admin/action" style="display:inline;">
+                            <input type="hidden" name="token" value="{{ token }}">
+                            <input type="hidden" name="action_type" value="unblock_device">
+                            <input type="hidden" name="target_key" value="{{ b.device_id }}">
+                            <button class="btn btn-danger" type="submit">Unblock</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">None.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Shadow-Banned Devices</div>
+        <table>
+            <thead>
+                <tr><th>Device ID</th><th>Reason</th><th>APK Sig</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+                {% for sb in shadow_banned_users %}
+                <tr>
+                    <td><code>{{ sb.device_id }}</code></td>
+                    <td><span class="badge badge-expired">{{ sb.reason }}</span></td>
+                    <td><code style="font-size:11px;">{{ sb.apk_sig }}</code></td>
+                    <td>
+                        <form method="post" action="/admin/action" style="display:inline;">
+                            <input type="hidden" name="token" value="{{ token }}">
+                            <input type="hidden" name="action_type" value="remove_shadowban">
+                            <input type="hidden" name="target_key" value="{{ sb.device_id }}">
+                            <button class="btn btn-danger" type="submit">Pardon</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">None.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <div class="footer">Copyright &copy; 2026 by Dr. Dev || Dr. Hamza</div>
+</div>
+</body>
+</html>
