@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+httpx[http2]
+cryptography
+firebase-admin
+pydantic
+jinja2
+python-multipart
