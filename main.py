@@ -973,25 +973,29 @@ async def admin_panel_view(request: Request, token: Optional[str] = None):
     rate_limited = [r for r in MEM_STATE["rate_limits"].values() if r.get("rate_limited_until", 0) > now]
     shadow = list(MEM_STATE["shadow_banned"].values())
 
-    return templates.TemplateResponse("admin.html", {
-        "request": request,
-        "authorized": (token == ADMIN_SECRET_TOKEN),
-        "token": token or "",
-        "stats": {
-            "active_count": len(active),
-            "expired_count": len(expired),
-            "blocked_count": len(blocked),
-            "rate_limited_count": len(rate_limited),
-            "shadow_banned_count": len(shadow),
-        },
-        "licenses": licenses_list,
-        "blocked_users": blocked,
-        "rate_limited_users": rate_limited,
-        "shadow_banned_users": shadow,
-        "update_config": MEM_STATE["update_config"],
-        "premium_cookies": MEM_STATE.get("premium_cookies", ""),
-        "now": now,
-    })
+        return templates.TemplateResponse(
+        request=request,
+        name="admin.html",
+        context={
+            "authorized": (token == ADMIN_SECRET_TOKEN),
+            "token": token or "",
+            "stats": {
+                "active_count": len(active),
+                "expired_count": len(expired),
+                "blocked_count": len(blocked),
+                "rate_limited_count": len(rate_limited),
+                "shadow_banned_count": len(shadow),
+            },
+            "licenses": licenses_list,
+            "blocked_users": blocked,
+            "rate_limited_users": rate_limited,
+            "shadow_banned_users": shadow,
+            "update_config": MEM_STATE["update_config"],
+            "premium_cookies": MEM_STATE.get("premium_cookies", ""),
+            "now": now,
+        }
+    )
+
 
 
 @app.post("/admin/action")
