@@ -973,7 +973,7 @@ async def admin_panel_view(request: Request, token: Optional[str] = None):
     rate_limited = [r for r in MEM_STATE["rate_limits"].values() if r.get("rate_limited_until", 0) > now]
     shadow = list(MEM_STATE["shadow_banned"].values())
 
-        return templates.TemplateResponse(
+    return templates.TemplateResponse(
         request=request,
         name="admin.html",
         context={
@@ -995,6 +995,7 @@ async def admin_panel_view(request: Request, token: Optional[str] = None):
             "now": now,
         }
     )
+
 
 
 
